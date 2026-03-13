@@ -1,6 +1,4 @@
 import { getDatabase, initDatabase, initializeSchema } from '../database';
-import { TagService } from '../services/TagService';
-import { TodoService } from '../services/TodoService';
 import { CompletionService } from '../services/CompletionService';
 import { ChecklistService } from '../services/ChecklistService';
 
@@ -191,30 +189,41 @@ async function seedDatabase() {
     await initDatabase();
     await initializeSchema();
 
-    const tagService = new TagService();
-    const todoService = new TodoService();
+    const db = getDatabase();
     const completionService = new CompletionService();
     const checklistService = new ChecklistService();
 
-    // Seed tags
+    // Seed tags - use fixed IDs from seedData
     console.log('📌 Seeding tags...');
     for (const tag of seedData.tags) {
-      await tagService.createTag(tag.name, tag.color);
+      const now = new Date().toISOString();
+      await db.run(
+        'INSERT INTO tags (id, name, color, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
+        [tag.id, tag.name, tag.color, now, now]
+      );
     }
     console.log(`✓ Created ${seedData.tags.length} tags`);
 
-    // Seed todos
+    // Seed todos - use fixed IDs from seedData
     console.log('📝 Seeding todos...');
     for (const todo of seedData.todos) {
-      await todoService.createTodo(
-        todo.title,
-        todo.notes,
-        todo.date,
-        todo.time,
-        todo.repeatType,
-        todo.repeatDays,
-        todo.tagIds
+      const now = new Date().toISOString();
+      const repeatDaysJson = JSON.stringify(todo.repeatDays);
+
+      // Insert todo directly with fixed ID
+      await db.run(
+        `INSERT INTO todos (id, title, notes, date, time, repeat_type, repeat_days, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [todo.id, todo.title, todo.notes, todo.date, todo.time, todo.repeatType, repeatDaysJson, now, now]
       );
+
+      // Add tags
+      for (const tagId of todo.tagIds) {
+        await db.run(
+          'INSERT INTO todo_tags (todo_id, tag_id) VALUES (?, ?)',
+          [todo.id, tagId]
+        );
+      }
     }
     console.log(`✓ Created ${seedData.todos.length} todos`);
 
