@@ -6,11 +6,8 @@ services:
     container_name: todoer-backend
     ports:
       - "3000:3000"
-    environment:
-      - PORT=3000
-      - DB_PATH=/root/data/todoer.db
-      - API_KEY=todo-secret-api-key-change-in-production
-      - ENV=production
+    env_file:
+      - .env
     volumes:
       - todoer-data:/root/data
     restart: unless-stopped
