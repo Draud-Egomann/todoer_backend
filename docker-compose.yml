@@ -1,0 +1,26 @@
+services:
+  todoer-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todoer-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DB_PATH=/root/data/todoer.db
+      - API_KEY=todo-secret-api-key-change-in-production
+      - ENV=production
+    volumes:
+      - todoer-data:/root/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  todoer-data:
+    driver: local
