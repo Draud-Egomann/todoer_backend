@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/cors"
-	"github.com/gofiber/fiber/v3/middleware/static"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
+	"github.com/swaggo/fiber-swagger"
 	_ "todoer-backend/docs"
 )
 
@@ -39,13 +39,13 @@ func main() {
 	})
 
 	// Static files
-	app.Use("/", static.New("./public"))
+	app.Static("/", "./public")
 
 	// CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:4200", "http://localhost:8100"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowOrigins:     "http://localhost:4200,http://localhost:8100",
+		AllowMethods:     "GET,POST,PUT,DELETE,PATCH,OPTIONS",
+		AllowHeaders:     "Content-Type,Authorization",
 		AllowCredentials: true,
 	}))
 
@@ -53,7 +53,8 @@ func main() {
 	app.Get("/health", HealthCheck)
 
 	// API routes with authentication
-	api := app.Group("/api", APIKeyMiddleware)
+	api := app.Group("/api")
+	api.Use(APIKeyMiddleware)
 
 	// Todos
 	api.Get("/todos", GetAllTodos)
@@ -95,9 +96,7 @@ func main() {
 	api.Get("/status/by-tag", GetStatusByTag)
 
 	// Swagger
-	app.Use("/swagger", static.New("./swagger", static.Config{
-		Browse: true,
-	}))
+	app.Get("/swagger/*", fiberSwagger.WrapHandler)
 
 	// Start server
 	port := os.Getenv("PORT")
@@ -115,7 +114,7 @@ func main() {
 // @Tags Health
 // @Success 200 {object} map[string]string
 // @Router /health [get]
-func HealthCheck(c fiber.Ctx) error {
+func HealthCheck(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"status": "ok",
 		"message": "Todoer API is running",

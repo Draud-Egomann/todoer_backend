@@ -1,10 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
@@ -16,7 +17,7 @@ import (
 // @Security ApiKeyAuth
 // @Success 200 {array} Todo
 // @Router /todos [get]
-func GetAllTodos(c fiber.Ctx) error {
+func GetAllTodos(c *fiber.Ctx) error {
 	todos, err := GetAllTodosDB()
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -33,7 +34,7 @@ func GetAllTodos(c fiber.Ctx) error {
 // @Param id path string true "Todo ID"
 // @Success 200 {object} Todo
 // @Router /todos/{id} [get]
-func GetTodoByID(c fiber.Ctx) error {
+func GetTodoByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	todo, err := GetTodoByIDB(id)
 	if err != nil {
@@ -56,7 +57,7 @@ func GetTodoByID(c fiber.Ctx) error {
 // @Param date path string true "Date in YYYY-MM-DD format"
 // @Success 200 {array} Todo
 // @Router /todos/by-date/{date} [get]
-func GetTodosByDate(c fiber.Ctx) error {
+func GetTodosByDate(c *fiber.Ctx) error {
 	dateStr := c.Params("date")
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
@@ -85,7 +86,7 @@ func GetTodosByDate(c fiber.Ctx) error {
 // @Param endDate path string true "End date in YYYY-MM-DD format"
 // @Success 200 {array} Todo
 // @Router /todos/range/{startDate}/{endDate} [get]
-func GetTodosForDateRange(c fiber.Ctx) error {
+func GetTodosForDateRange(c *fiber.Ctx) error {
 	startStr := c.Params("startDate")
 	endStr := c.Params("endDate")
 
@@ -124,9 +125,9 @@ func GetTodosForDateRange(c fiber.Ctx) error {
 // @Param request body CreateTodoRequest true "Todo data"
 // @Success 201 {object} Todo
 // @Router /todos [post]
-func CreateTodo(c fiber.Ctx) error {
+func CreateTodo(c *fiber.Ctx) error {
 	var req CreateTodoRequest
-	if err := c.Bind().JSON(&req); err != nil {
+	if err := json.Unmarshal(c.Body(), &req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
@@ -163,10 +164,10 @@ func CreateTodo(c fiber.Ctx) error {
 // @Param request body UpdateTodoRequest true "Todo data"
 // @Success 200 {object} Todo
 // @Router /todos/{id} [put]
-func UpdateTodo(c fiber.Ctx) error {
+func UpdateTodo(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var req UpdateTodoRequest
-	if err := c.Bind().JSON(&req); err != nil {
+	if err := json.Unmarshal(c.Body(), &req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
@@ -221,7 +222,7 @@ func UpdateTodo(c fiber.Ctx) error {
 // @Param id path string true "Todo ID"
 // @Success 204
 // @Router /todos/{id} [delete]
-func DeleteTodo(c fiber.Ctx) error {
+func DeleteTodo(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if err := DeleteTodoDB(id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -239,7 +240,7 @@ func DeleteTodo(c fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Success 200 {array} Tag
 // @Router /tags [get]
-func GetAllTags(c fiber.Ctx) error {
+func GetAllTags(c *fiber.Ctx) error {
 	tags, err := GetAllTagsDB()
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -256,7 +257,7 @@ func GetAllTags(c fiber.Ctx) error {
 // @Param id path string true "Tag ID"
 // @Success 200 {object} Tag
 // @Router /tags/{id} [get]
-func GetTagByID(c fiber.Ctx) error {
+func GetTagByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	tag, err := GetTagByIDB(id)
 	if err != nil {
@@ -280,9 +281,9 @@ func GetTagByID(c fiber.Ctx) error {
 // @Param request body CreateTagRequest true "Tag data"
 // @Success 201 {object} Tag
 // @Router /tags [post]
-func CreateTag(c fiber.Ctx) error {
+func CreateTag(c *fiber.Ctx) error {
 	var req CreateTagRequest
-	if err := c.Bind().JSON(&req); err != nil {
+	if err := json.Unmarshal(c.Body(), &req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
@@ -314,10 +315,10 @@ func CreateTag(c fiber.Ctx) error {
 // @Param request body UpdateTagRequest true "Tag data"
 // @Success 200 {object} Tag
 // @Router /tags/{id} [put]
-func UpdateTag(c fiber.Ctx) error {
+func UpdateTag(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var req UpdateTagRequest
-	if err := c.Bind().JSON(&req); err != nil {
+	if err := json.Unmarshal(c.Body(), &req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
@@ -359,7 +360,7 @@ func UpdateTag(c fiber.Ctx) error {
 // @Param id path string true "Tag ID"
 // @Success 204
 // @Router /tags/{id} [delete]
-func DeleteTag(c fiber.Ctx) error {
+func DeleteTag(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if err := DeleteTagDB(id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -378,7 +379,7 @@ func DeleteTag(c fiber.Ctx) error {
 // @Param todoId path string true "Todo ID"
 // @Success 200 {array} TodoCompletion
 // @Router /completions/todo/{todoId} [get]
-func GetCompletionsByTodoID(c fiber.Ctx) error {
+func GetCompletionsByTodoID(c *fiber.Ctx) error {
 	todoID := c.Params("todoId")
 	completions, err := GetCompletionsByTodoIDB(todoID)
 	if err != nil {
@@ -397,7 +398,7 @@ func GetCompletionsByTodoID(c fiber.Ctx) error {
 // @Param date path string true "Date in YYYY-MM-DD format"
 // @Success 200 {object} TodoCompletion
 // @Router /completions/todo/{todoId}/date/{date} [get]
-func GetCompletion(c fiber.Ctx) error {
+func GetCompletion(c *fiber.Ctx) error {
 	todoID := c.Params("todoId")
 	dateStr := c.Params("date")
 
@@ -422,7 +423,7 @@ func GetCompletion(c fiber.Ctx) error {
 // @Param date path string true "Date in YYYY-MM-DD format"
 // @Success 200 {array} TodoCompletion
 // @Router /completions/date/{date} [get]
-func GetCompletionsForDate(c fiber.Ctx) error {
+func GetCompletionsForDate(c *fiber.Ctx) error {
 	dateStr := c.Params("date")
 	_, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
@@ -449,7 +450,7 @@ func GetCompletionsForDate(c fiber.Ctx) error {
 // @Param endDate path string true "End date in YYYY-MM-DD format"
 // @Success 200 {array} TodoCompletion
 // @Router /completions/range/{startDate}/{endDate} [get]
-func GetCompletionsForDateRange(c fiber.Ctx) error {
+func GetCompletionsForDateRange(c *fiber.Ctx) error {
 	startStr := c.Params("startDate")
 	endStr := c.Params("endDate")
 
@@ -487,7 +488,7 @@ func GetCompletionsForDateRange(c fiber.Ctx) error {
 // @Param request body SetCompletionRequest true "Completion data"
 // @Success 201 {object} TodoCompletion
 // @Router /completions/todo/{todoId}/date/{date} [post]
-func SetCompletion(c fiber.Ctx) error {
+func SetCompletion(c *fiber.Ctx) error {
 	todoID := c.Params("todoId")
 	dateStr := c.Params("date")
 
@@ -499,7 +500,7 @@ func SetCompletion(c fiber.Ctx) error {
 	}
 
 	var req SetCompletionRequest
-	if err := c.Bind().JSON(&req); err != nil {
+	if err := json.Unmarshal(c.Body(), &req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
@@ -531,7 +532,7 @@ func SetCompletion(c fiber.Ctx) error {
 // @Param date path string true "Date in YYYY-MM-DD format"
 // @Success 204
 // @Router /completions/todo/{todoId}/date/{date} [delete]
-func DeleteCompletion(c fiber.Ctx) error {
+func DeleteCompletion(c *fiber.Ctx) error {
 	todoID := c.Params("todoId")
 	dateStr := c.Params("date")
 
@@ -552,7 +553,7 @@ func DeleteCompletion(c fiber.Ctx) error {
 // @Param todoId path string true "Todo ID"
 // @Success 200 {array} ChecklistItem
 // @Router /checklists/todo/{todoId} [get]
-func GetChecklistItems(c fiber.Ctx) error {
+func GetChecklistItems(c *fiber.Ctx) error {
 	todoID := c.Params("todoId")
 	items, err := GetChecklistItemsForTodoDB(todoID)
 	if err != nil {
@@ -570,7 +571,7 @@ func GetChecklistItems(c fiber.Ctx) error {
 // @Param todoId path string true "Todo ID"
 // @Success 200 {object} map[string]interface{}
 // @Router /checklists/todo/{todoId}/stats [get]
-func GetChecklistStats(c fiber.Ctx) error {
+func GetChecklistStats(c *fiber.Ctx) error {
 	todoID := c.Params("todoId")
 	items, err := GetChecklistItemsForTodoDB(todoID)
 	if err != nil {
@@ -606,7 +607,7 @@ func GetChecklistStats(c fiber.Ctx) error {
 // @Param id path string true "Checklist Item ID"
 // @Success 200 {object} ChecklistItem
 // @Router /checklists/{id} [get]
-func GetChecklistItem(c fiber.Ctx) error {
+func GetChecklistItem(c *fiber.Ctx) error {
 	id := c.Params("id")
 	item, err := GetChecklistItemByIDB(id)
 	if err != nil {
@@ -630,9 +631,9 @@ func GetChecklistItem(c fiber.Ctx) error {
 // @Param request body CreateChecklistItemRequest true "Checklist item data"
 // @Success 201 {object} ChecklistItem
 // @Router /checklists [post]
-func CreateChecklistItem(c fiber.Ctx) error {
+func CreateChecklistItem(c *fiber.Ctx) error {
 	var req CreateChecklistItemRequest
-	if err := c.Bind().JSON(&req); err != nil {
+	if err := json.Unmarshal(c.Body(), &req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
@@ -665,10 +666,10 @@ func CreateChecklistItem(c fiber.Ctx) error {
 // @Param request body UpdateChecklistItemRequest true "Checklist item data"
 // @Success 200 {object} ChecklistItem
 // @Router /checklists/{id} [put]
-func UpdateChecklistItem(c fiber.Ctx) error {
+func UpdateChecklistItem(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var req UpdateChecklistItemRequest
-	if err := c.Bind().JSON(&req); err != nil {
+	if err := json.Unmarshal(c.Body(), &req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
@@ -708,7 +709,7 @@ func UpdateChecklistItem(c fiber.Ctx) error {
 // @Param id path string true "Checklist Item ID"
 // @Success 200 {object} ChecklistItem
 // @Router /checklists/{id}/toggle [patch]
-func ToggleChecklistItem(c fiber.Ctx) error {
+func ToggleChecklistItem(c *fiber.Ctx) error {
 	id := c.Params("id")
 	item, err := GetChecklistItemByIDB(id)
 	if err != nil {
@@ -741,7 +742,7 @@ func ToggleChecklistItem(c fiber.Ctx) error {
 // @Param id path string true "Checklist Item ID"
 // @Success 204
 // @Router /checklists/{id} [delete]
-func DeleteChecklistItem(c fiber.Ctx) error {
+func DeleteChecklistItem(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if err := DeleteChecklistItemDB(id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -759,7 +760,7 @@ func DeleteChecklistItem(c fiber.Ctx) error {
 // @Security ApiKeyAuth
 // @Success 200 {object} StatusResponse
 // @Router /status/today [get]
-func GetStatusToday(c fiber.Ctx) error {
+func GetStatusToday(c *fiber.Ctx) error {
 	today := time.Now()
 	dateStr := today.Format("2006-01-02")
 
@@ -792,7 +793,7 @@ func GetStatusToday(c fiber.Ctx) error {
 // @Param date query string false "Date in YYYY-MM-DD format"
 // @Success 200 {object} StatusResponse
 // @Router /status/summary [get]
-func GetStatusSummary(c fiber.Ctx) error {
+func GetStatusSummary(c *fiber.Ctx) error {
 	dateStr := c.Query("date")
 	if dateStr == "" {
 		dateStr = time.Now().Format("2006-01-02")
@@ -836,7 +837,7 @@ func GetStatusSummary(c fiber.Ctx) error {
 // @Param endDate path string true "End date in YYYY-MM-DD format"
 // @Success 200 {array} StatusResponse
 // @Router /status/range/{startDate}/{endDate} [get]
-func GetStatusRange(c fiber.Ctx) error {
+func GetStatusRange(c *fiber.Ctx) error {
 	startStr := c.Params("startDate")
 	endStr := c.Params("endDate")
 
@@ -883,7 +884,7 @@ func GetStatusRange(c fiber.Ctx) error {
 // @Param endDate query string false "End date in YYYY-MM-DD format"
 // @Success 200 {array} StatusByTagResponse
 // @Router /status/by-tag [get]
-func GetStatusByTag(c fiber.Ctx) error {
+func GetStatusByTag(c *fiber.Ctx) error {
 	startDate := c.Query("startDate")
 	endDate := c.Query("endDate")
 

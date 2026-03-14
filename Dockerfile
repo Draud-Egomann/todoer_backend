@@ -1,7 +1,7 @@
 # Build stage
 FROM golang:1.25-alpine AS builder
 
-RUN apk add --no-cache gcc musl-dev sqlite-dev
+RUN apk add --no-cache gcc musl-dev sqlite-dev git
 
 WORKDIR /app
 
@@ -13,6 +13,12 @@ RUN go mod download
 
 # Copy source code
 COPY . .
+
+# Tidy go modules
+RUN go mod tidy
+
+# Install swag CLI and generate swagger docs
+RUN go install github.com/swaggo/swag/cmd/swag@latest && swag init
 
 # Build the application
 RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o todoer-backend .
@@ -27,6 +33,9 @@ WORKDIR /root/
 
 # Copy the binary from builder
 COPY --from=builder /app/todoer-backend .
+
+# Copy swagger docs from builder
+COPY --from=builder /app/docs ./docs
 
 # Create a data directory for the database
 RUN mkdir -p /root/data

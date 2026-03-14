@@ -4,11 +4,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 )
 
 // APIKeyMiddleware checks for valid API key in Authorization header
-func APIKeyMiddleware(c fiber.Ctx) error {
+func APIKeyMiddleware(c *fiber.Ctx) error {
 	apiKey := os.Getenv("API_KEY")
 	if apiKey == "" {
 		apiKey = "default-api-key-change-in-production"
