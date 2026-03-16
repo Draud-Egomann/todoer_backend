@@ -22,6 +22,7 @@ type Todo struct {
 	Time      string `json:"time"`
 	RepeatType RepeatType `json:"repeatType"`
 	RepeatDays string `json:"repeatDays"` // JSON array stored as string
+	Important bool `json:"important"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
@@ -71,6 +72,8 @@ type CreateTodoRequest struct {
 	Time       string `json:"time" validate:"required"`
 	RepeatType RepeatType `json:"repeatType"`
 	RepeatDays []int `json:"repeatDays"`
+	TagIDs     []string `json:"tagIds"`
+	Important  bool `json:"important"`
 }
 
 // UpdateTodoRequest is the request structure for updating a todo
@@ -79,6 +82,8 @@ type UpdateTodoRequest struct {
 	Notes      string `json:"notes"`
 	Date       time.Time `json:"date"`
 	Time       string `json:"time"`
+	TagIDs     []string `json:"tagIds"`
+	Important  *bool `json:"important"`
 	RepeatType RepeatType `json:"repeatType"`
 	RepeatDays []int `json:"repeatDays"`
 }

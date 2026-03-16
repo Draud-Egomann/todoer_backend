@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -201,4 +203,58 @@ func DeserializeRepeatDays(data string) []int {
 	var days []int
 	json.Unmarshal([]byte(data), &days)
 	return days
+}
+
+// GetTagsForTodoDB gets all tags for a specific todo
+func GetTagsForTodoDB(todoID string) ([]Tag, error) {
+	var tags []Tag
+	result := DB.Where("id IN (SELECT tag_id FROM todo_tags WHERE todo_id = ?)", todoID).Find(&tags)
+	return tags, result.Error
+}
+
+// CreateTodoTagsDB creates tag relationships for a todo
+func CreateTodoTagsDB(todoID string, tagIDs []string) error {
+	if len(tagIDs) == 0 {
+		return nil
+	}
+	return DB.Transaction(func(tx *gorm.DB) error {
+		for _, tagID := range tagIDs {
+			todoTag := &TodoTag{
+				ID:        uuid.New().String(),
+				TodoID:    todoID,
+				TagID:     tagID,
+				CreatedAt: time.Now(),
+			}
+			if err := tx.Create(todoTag).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// UpdateTodoTagsDB updates tag relationships for a todo (replaces all tags)
+func UpdateTodoTagsDB(todoID string, tagIDs []string) error {
+	return DB.Transaction(func(tx *gorm.DB) error {
+		// Delete existing tags
+		if err := tx.Where("todo_id = ?", todoID).Delete(&TodoTag{}).Error; err != nil {
+			return err
+		}
+		// Create new tags
+		if len(tagIDs) == 0 {
+			return nil
+		}
+		for _, tagID := range tagIDs {
+			todoTag := &TodoTag{
+				ID:        uuid.New().String(),
+				TodoID:    todoID,
+				TagID:     tagID,
+				CreatedAt: time.Now(),
+			}
+			if err := tx.Create(todoTag).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

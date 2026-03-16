@@ -141,6 +141,7 @@ func CreateTodo(c *fiber.Ctx) error {
 		Time:      req.Time,
 		RepeatType: req.RepeatType,
 		RepeatDays: SerializeRepeatDays(req.RepeatDays),
+		Important: req.Important,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -149,6 +150,14 @@ func CreateTodo(c *fiber.Ctx) error {
 		log.Println("Error creating todo:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to create todo",
+		})
+	}
+
+	// Create tag relationships
+	if err := CreateTodoTagsDB(todo.ID, req.TagIDs); err != nil {
+		log.Println("Error creating todo tags:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create todo tags",
 		})
 	}
 
@@ -204,12 +213,25 @@ func UpdateTodo(c *fiber.Ctx) error {
 	if len(req.RepeatDays) > 0 {
 		todo.RepeatDays = SerializeRepeatDays(req.RepeatDays)
 	}
+	if req.Important != nil {
+		todo.Important = *req.Important
+	}
 	todo.UpdatedAt = time.Now()
 
 	if err := UpdateTodoDB(todo); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to update todo",
 		})
+	}
+
+	// Update tag relationships if provided
+	if len(req.TagIDs) > 0 || (len(req.TagIDs) == 0 && req.TagIDs != nil) {
+		if err := UpdateTodoTagsDB(id, req.TagIDs); err != nil {
+			log.Println("Error updating todo tags:", err)
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to update todo tags",
+			})
+		}
 	}
 
 	return c.JSON(todo)
