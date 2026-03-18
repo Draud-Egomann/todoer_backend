@@ -94,6 +94,7 @@ func main() {
 	api.Get("/status/summary", GetStatusSummary)
 	api.Get("/status/range/:startDate/:endDate", GetStatusRange)
 	api.Get("/status/by-tag", GetStatusByTag)
+	api.Get("/status/day/:date", GetDayCompletionStatus)
 
 	// Swagger
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)

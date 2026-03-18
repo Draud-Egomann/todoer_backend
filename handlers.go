@@ -952,3 +952,38 @@ func GetStatusByTag(c *fiber.Ctx) error {
 
 	return c.JSON(response)
 }
+
+// @Summary Get day completion status
+// @Description Get completion status for a specific day, including whether all todos are completed and count of uncompleted todos
+// @Tags Status
+// @Security ApiKeyAuth
+// @Param date path string true "Date in YYYY-MM-DD format"
+// @Success 200 {object} DayCompletionResponse
+// @Router /status/day/{date} [get]
+func GetDayCompletionStatus(c *fiber.Ctx) error {
+	dateStr := c.Params("date")
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid date format, use YYYY-MM-DD",
+		})
+	}
+
+	var todos []Todo
+	var completions []TodoCompletion
+
+	DB.Where("DATE(date) = ?", dateStr).Find(&todos)
+	DB.Where("DATE(date) = ? AND completed = ?", dateStr, true).Find(&completions)
+
+	totalTodos := len(todos)
+	completedTodos := len(completions)
+	uncompletedCount := totalTodos - completedTodos
+	allCompleted := uncompletedCount == 0 && totalTodos > 0
+
+	return c.JSON(DayCompletionResponse{
+		Date:             date,
+		AllCompleted:     allCompleted,
+		UncompletedCount: uncompletedCount,
+		TotalTodos:       totalTodos,
+	})
+}

@@ -134,6 +134,14 @@ type StatusByTagResponse struct {
 	CompletionRate float64 `json:"completionRate"`
 }
 
+// DayCompletionResponse represents the completion status for a specific day
+type DayCompletionResponse struct {
+	Date               time.Time `json:"date"`
+	AllCompleted       bool `json:"allCompleted"`
+	UncompletedCount   int `json:"uncompletedCount"`
+	TotalTodos         int `json:"totalTodos"`
+}
+
 // Pagination helper
 type PaginationRequest struct {
 	Page  int `query:"page"`
