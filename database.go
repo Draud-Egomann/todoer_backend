@@ -80,7 +80,7 @@ func SeedDB() error {
 			Date:       time.Now().Add(24 * time.Hour),
 			Time:       "08:00",
 			RepeatType: 1, // Daily
-			RepeatDays: SerializeRepeatDays([]int{7}),
+			RepeatDays: SerializeRepeatDays(BuildDays(7)),
 			Important:   true,
 		},
 		{
@@ -89,8 +89,8 @@ func SeedDB() error {
 			Notes:			"Milch, Brot, Eier",
 			Date:       time.Now().Add(48 * time.Hour),
 			Time:       "10:00",
-			RepeatType: 1,
-			RepeatDays: SerializeRepeatDays([]int{6}), // Saturday
+			RepeatType: 2,
+			RepeatDays: SerializeRepeatDays(BuildDays(4)),
 			Important:   false,
 		},
 		{
@@ -110,7 +110,7 @@ func SeedDB() error {
 			Date:       time.Now().Add(96 * time.Hour),
 			Time:       "16:00",
 			RepeatType: 1, // Daily
-			RepeatDays: SerializeRepeatDays([]int{7}), // Sunday
+			RepeatDays: SerializeRepeatDays(BuildDays(7)),
 			Important:   true,
 		},
 		{
@@ -332,6 +332,15 @@ func CreateOrUpdateCompletionDB(completion *TodoCompletion) error {
 // DeleteCompletionDB deletes a completion record
 func DeleteCompletionDB(todoID, date string) error {
 	return DB.Where("todo_id = ? AND DATE(date) = ?", todoID, date).Delete(&TodoCompletion{}).Error
+}
+
+// Helper to gen Slice
+func BuildDays(n int) []int {
+	var days []int
+	for i := 1; i <= n; i++ {
+		days = append(days, i)
+	}
+	return days
 }
 
 // Helper to serialize repeat days
