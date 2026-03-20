@@ -207,7 +207,7 @@ func UpdateTodo(c *fiber.Ctx) error {
 	if req.Time != "" {
 		todo.Time = req.Time
 	}
-	if req.RepeatType != "" {
+	if req.RepeatType == 0 || req.RepeatType == 1 || req.RepeatType == 2 {
 		todo.RepeatType = req.RepeatType
 	}
 	if len(req.RepeatDays) > 0 {
