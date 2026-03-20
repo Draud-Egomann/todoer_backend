@@ -41,6 +41,133 @@ func InitDB() error {
 	return nil
 }
 
+// SeedDB seeds the database with initial data (for development/testing)
+func SeedDB() error {
+	var count int64
+	DB.Model(&Todo{}).Count(&count)
+	DB.Model(&Tag{}).Count(&count)
+
+	// If there are already todos or tags, skip seeding
+	if count > 0 {
+		log.Println("Database already has data, skipping seeding")
+		return nil
+	}
+	
+	log.Println("🌱 Seeding database with initial data...")
+	tagMap := make(map[string]string)
+
+	// Create tags
+	tags := []Tag{
+		{ID: uuid.New().String(), Name: "Medis", Color: "#FF5733"},
+		{ID: uuid.New().String(), Name: "Einkaufen", Color: "#33FF57"},
+		{ID: uuid.New().String(), Name: "Kaufen", Color: "#3357FF"},
+		{ID: uuid.New().String(), Name: "Recherieren", Color: "#F533FF"},
+	}
+
+	for i := range tags {
+		if err := CreateTagDB(&tags[i]); err != nil {
+			return err
+		}
+		tagMap[tags[i].Name] = tags[i].ID
+	}
+
+	// Create todos
+	todos := []Todo{
+		{
+			ID:         uuid.New().String(),
+			Title:      "Medis nehmen",
+			Notes:			"Morgens und Abends",
+			Date:       time.Now().Add(24 * time.Hour),
+			Time:       "08:00",
+			RepeatType: 1, // Daily
+			RepeatDays: SerializeRepeatDays([]int{7}),
+			Important:   true,
+		},
+		{
+			ID:         uuid.New().String(),
+			Title:      "Einkaufen gehen",
+			Notes:			"Milch, Brot, Eier",
+			Date:       time.Now().Add(48 * time.Hour),
+			Time:       "10:00",
+			RepeatType: 1,
+			RepeatDays: SerializeRepeatDays([]int{6}), // Saturday
+			Important:   false,
+		},
+		{
+			ID:         uuid.New().String(),
+			Title:      "Recherieren für Projekt",
+			Notes:      "Recherieren für Projekt",
+			Date:       time.Now().Add(72 * time.Hour),
+			Time:       "14:00",
+			RepeatType: 0, // None
+			RepeatDays: SerializeRepeatDays([]int{}), // No repeat
+			Important:   false,
+		},
+		{
+			ID:         uuid.New().String(),
+			Title:      "Geschenk kaufen",
+			Notes:      "Geschenk für Familie",
+			Date:       time.Now().Add(96 * time.Hour),
+			Time:       "16:00",
+			RepeatType: 1, // Daily
+			RepeatDays: SerializeRepeatDays([]int{7}), // Sunday
+			Important:   true,
+		},
+		{
+			ID:         uuid.New().String(),
+			Title:      "Freizeitaktivität planen",
+			Notes:      "Freizeitaktivität planen",
+			Date:       time.Now().Add(120 * time.Hour),
+			Time:       "18:00",
+			RepeatType: 0, // None
+			RepeatDays: SerializeRepeatDays([]int{}), // No repeat
+			Important:   true,
+		},
+	}
+
+	for i := range todos {
+		if err := CreateTodoDB(&todos[i]); err != nil {
+			return err
+		}
+	}
+
+	// Create todo-tag relationships
+	todoTags := []TodoTag{
+		{
+			ID:        uuid.New().String(),
+			TodoID:    todos[1].ID,
+			TagID:     tagMap["Einkaufen"],
+		},
+		{
+			ID:        uuid.New().String(),
+			TodoID:    todos[3].ID,
+			TagID:     tagMap["Kaufen"],
+		},
+	}
+
+	for i := range todoTags {
+		if err := DB.Create(&todoTags[i]).Error; err != nil {
+			return err
+		}
+	}
+
+	checklist := []ChecklistItem{
+		{ID: uuid.New().String(), TodoID: todos[3].ID, Text: "Geschenk auswählen"},
+		{ID: uuid.New().String(), TodoID: todos[2].ID, Text: "Preis vergleichen"},
+		{ID: uuid.New().String(), TodoID: todos[3].ID, Text: "Kaufen"},
+	}
+
+	for i := range checklist {
+		if err := DB.Create(&checklist[i]).Error; err != nil {
+			return err
+		}
+	}
+
+	log.Println("✅ Database seeding completed successfully")
+
+	return nil
+}
+
 // Helper functions for common queries
 
 // GetAllTodosDB fetches all todos from database
@@ -62,11 +189,16 @@ func GetTodoByIDB(id string) (*Todo, error) {
 
 // CreateTodoDB creates a new todo
 func CreateTodoDB(todo *Todo) error {
+	now := time.Now()
+	todo.CreatedAt = now
+	todo.UpdatedAt = now
 	return DB.Create(todo).Error
 }
 
 // UpdateTodoDB updates a todo
 func UpdateTodoDB(todo *Todo) error {
+	now := time.Now()
+	todo.UpdatedAt = now
 	return DB.Save(todo).Error
 }
 
@@ -109,11 +241,16 @@ func GetTagByIDB(id string) (*Tag, error) {
 
 // CreateTagDB creates a new tag
 func CreateTagDB(tag *Tag) error {
+	now := time.Now()
+	tag.CreatedAt = now
+	tag.UpdatedAt = now
 	return DB.Create(tag).Error
 }
 
 // UpdateTagDB updates a tag
 func UpdateTagDB(tag *Tag) error {
+	now := time.Now()
+	tag.UpdatedAt = now
 	return DB.Save(tag).Error
 }
 
@@ -141,11 +278,16 @@ func GetChecklistItemByIDB(id string) (*ChecklistItem, error) {
 
 // CreateChecklistItemDB creates a checklist item
 func CreateChecklistItemDB(item *ChecklistItem) error {
+	now := time.Now()
+	item.CreatedAt = now
+	item.UpdatedAt = now
 	return DB.Create(item).Error
 }
 
 // UpdateChecklistItemDB updates a checklist item
 func UpdateChecklistItemDB(item *ChecklistItem) error {
+	now := time.Now()
+	item.UpdatedAt = now
 	return DB.Save(item).Error
 }
 
@@ -176,7 +318,10 @@ func CreateOrUpdateCompletionDB(completion *TodoCompletion) error {
 	var existing TodoCompletion
 	result := DB.Where("todo_id = ? AND DATE(date) = ?", completion.TodoID, completion.Date.Format("2006-01-02")).First(&existing)
 	
+	now := time.Now()
+	completion.UpdatedAt = now
 	if result.Error == gorm.ErrRecordNotFound {
+		completion.CreatedAt = now
 		return DB.Create(completion).Error
 	}
 	
@@ -223,7 +368,6 @@ func CreateTodoTagsDB(todoID string, tagIDs []string) error {
 				ID:        uuid.New().String(),
 				TodoID:    todoID,
 				TagID:     tagID,
-				CreatedAt: time.Now(),
 			}
 			if err := tx.Create(todoTag).Error; err != nil {
 				return err
@@ -249,7 +393,6 @@ func UpdateTodoTagsDB(todoID string, tagIDs []string) error {
 				ID:        uuid.New().String(),
 				TodoID:    todoID,
 				TagID:     tagID,
-				CreatedAt: time.Now(),
 			}
 			if err := tx.Create(todoTag).Error; err != nil {
 				return err

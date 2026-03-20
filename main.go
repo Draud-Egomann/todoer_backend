@@ -33,6 +33,13 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
+	// Seed database with initial data (only if development environment)
+	if os.Getenv("ENV") == "development" {
+		if err := SeedDB(); err != nil {
+			log.Fatalf("Failed to seed database: %v", err)
+		}
+	}
+
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
 		AppName: "Todoer API v1.0.0",
