@@ -4,13 +4,12 @@ import (
 	"time"
 )
 
-type RepeatType string
+type RepeatType uint8
 
 const (
-	RepeatTypeNone     RepeatType = "none"
-	RepeatTypeDaily    RepeatType = "daily"
-	RepeatTypeWeekly   RepeatType = "weekly"
-	RepeatTypeMonthly  RepeatType = "monthly"
+	RepeatTypeNone     RepeatType = 0
+	RepeatTypeDaily    RepeatType = 1
+	RepeatTypeWeekly   RepeatType = 2
 )
 
 // Todo represents a todo item
