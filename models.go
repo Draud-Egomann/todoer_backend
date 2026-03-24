@@ -17,6 +17,8 @@ type Todo struct {
 	ID        string `gorm:"primaryKey" json:"id"`
 	Title     string `json:"title"`
 	Notes     string `json:"notes"`
+	Tags        []Tag `gorm:"many2many:todo_tags;"`
+	Checklist   []ChecklistItem
 	Date      time.Time `json:"date"`
 	Time      string `json:"time"`
 	RepeatType RepeatType `json:"repeatType"`

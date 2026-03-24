@@ -173,14 +173,23 @@ func SeedDB() error {
 // GetAllTodosDB fetches all todos from database
 func GetAllTodosDB() ([]Todo, error) {
 	var todos []Todo
-	result := DB.Order("date DESC, time DESC").Find(&todos)
+	result := DB.
+		Preload("Tags").
+		Preload("Checklist").
+		Order("date DESC, time DESC").
+		Find(&todos)
+
 	return todos, result.Error
 }
 
 // GetTodoByIDB fetches a single todo by ID
 func GetTodoByIDB(id string) (*Todo, error) {
 	var todo Todo
-	result := DB.First(&todo, "id = ?", id)
+	result := DB.
+		Preload("Tags").
+		Preload("Checklist").
+		First(&todo, "id = ?", id)
+
 	if result.Error == gorm.ErrRecordNotFound {
 		return nil, nil
 	}
