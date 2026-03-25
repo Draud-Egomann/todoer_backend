@@ -68,7 +68,10 @@ func GetTodosByDate(c *fiber.Ctx) error {
 
 	var todos []Todo
 	result := DB.Where("DATE(date) = ?", date.Format("2006-01-02")).
-		Order("time DESC").Find(&todos)
+		Order("time DESC").
+		Preload("Tags").
+		Preload("Checklist").
+		Find(&todos)
 	
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -106,7 +109,10 @@ func GetTodosForDateRange(c *fiber.Ctx) error {
 
 	var todos []Todo
 	result := DB.Where("DATE(date) BETWEEN ? AND ?", start.Format("2006-01-02"), end.Format("2006-01-02")).
-		Order("date DESC, time DESC").Find(&todos)
+		Order("date DESC, time DESC").
+		Preload("Tags").
+		Preload("Checklist").
+		Find(&todos)
 	
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
