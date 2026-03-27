@@ -139,6 +139,10 @@ func CreateTodo(c *fiber.Ctx) error {
 		})
 	}
 
+	if req.RepeatType == 1 {
+		req.RepeatDays = []int{0,1,2,3,4,5,6};
+	}
+
 	todo := &Todo{
 		ID:        uuid.New().String(),
 		Title:     req.Title,
@@ -215,6 +219,9 @@ func UpdateTodo(c *fiber.Ctx) error {
 	}
 	if req.RepeatType == 0 || req.RepeatType == 1 || req.RepeatType == 2 {
 		todo.RepeatType = req.RepeatType
+	}
+	if req.RepeatType == 1 {
+		req.RepeatDays = []int{0,1,2,3,4,5,6};
 	}
 	if len(req.RepeatDays) > 0 {
 		todo.RepeatDays = SerializeRepeatDays(req.RepeatDays)
